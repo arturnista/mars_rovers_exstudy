@@ -3,14 +3,17 @@ defmodule Mars do
     def execute(action_string) do
         [ plateauData | roversData ] = String.split(action_string, "\n")
 
-        [ px, py ] = String.split(plateauData, [" "])
-        |> Enum.map(&Integer.parse/1)
-        |> Enum.map(fn({ i, _n }) -> i end)
+        [ px, py ] = for pos <- String.split(plateauData, [" "]) do
+            { i, _n } = Integer.parse(pos)
+            i
+        end
 
         plateau = { px, py }
 
-        rovers = Enum.chunk(roversData, 2)
-        |> Enum.map(&Mars.create_rover/1)
+        rovers = for roverData <- Enum.chunk(roversData, 2) do
+            { _st, rover } = Mars.create_rover(roverData)
+            Mars.execute_actions(rover, plateau)
+        end
     end
 
     def create_rover([ posDir, actions ]) do
@@ -21,6 +24,8 @@ defmodule Mars do
         |> Enum.filter(fn(x) -> String.length(x) > 0 end)
         { :ok, %Mars.Rover{ position: { x, y }, direction: direction, actions: actions } }
     end
+
+    def create_rover(_ac), do: { :error }
 
     def execute_actions(%Mars.Rover{ actions: actions } = rover, plateau) do
         case length(actions) do

@@ -2,12 +2,36 @@ defmodule MarsTest do
     use ExUnit.Case
     doctest Mars
 
-    # test "rover in position 1, 2 and direction N should finish at 1, 3 and N" do
-    #     Mars.execute("5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM")
-    # end
+    test "execute with 5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM should return rovers in 1, 3 N and 5, 1, E" do
+        assert Mars.execute("5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM") == [
+            %Mars.Rover{actions: [], direction: "N", position: {1, 3}},
+            %Mars.Rover{actions: [], direction: "E", position: {5, 1}}
+        ]
+    end
 
     test "create rover with 1 2 N and LMLMLMLMM should return a rover with position 1, 2, direction N and actions as a list" do
-        assert Mars.create_rover(["1 2 N", "LMLMLMLMM"]) == { :ok, %Mars.Rover{ position: { 1, 2 }, direction: "N", actions: ["L", "M", "L", "M", "L", "M", "L", "M", "M" ] } }
+        assert Mars.create_rover(["1 2 N", "LMLMLMLMM"]) == {
+            :ok,
+            %Mars.Rover{ position: { 1, 2 }, direction: "N", actions: ["L", "M", "L", "M", "L", "M", "L", "M", "M" ] }
+        }
+    end
+
+    # test "create rover with 3 should return an error" do
+    #     assert Mars.create_rover(["1 2", "LMAS"]) == {
+    #         :error
+    #     }
+    # end
+
+    test "create rover without actions should return an error" do
+        assert Mars.create_rover(["1 2 N"]) == {
+            :error
+        }
+    end
+
+    test "create rover with three items should return an error" do
+        assert Mars.create_rover(["1 2 N", "MMM", "M"]) == {
+            :error
+        }
     end
 
     test "rover in position 1, 2 and direction N should finish at 1, 3 and N" do
@@ -69,11 +93,11 @@ defmodule MarsTest do
         assert Mars.action(%Mars.Rover{ actions: ["M"], position: { 1, 1 }, direction: "W" }, { 5, 5 }) == %Mars.Rover{ actions: [], position: { 0, 1 }, direction: "W" }
     end
 
-    test "move 5, 5 to north should return 5, 5" do
+    test "move 5, 5 to north should return 5, 5 with plateau boundaries being 5, 5" do
         assert Mars.action(%Mars.Rover{ actions: ["M"], position: { 5, 5 }, direction: "N" }, { 5, 5 }) == %Mars.Rover{ actions: [], position: { 5, 5 }, direction: "N" }
     end
 
-    test "move 5, 5 to east should return 5, 5" do
+    test "move 5, 5 to east should return 5, 5 with plateau boundaries being 5, 5" do
         assert Mars.action(%Mars.Rover{ actions: ["M"], position: { 5, 5 }, direction: "E" }, { 5, 5 }) == %Mars.Rover{ actions: [], position: { 5, 5 }, direction: "E" }
     end
 
