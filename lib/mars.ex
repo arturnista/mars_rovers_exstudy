@@ -10,11 +10,11 @@ defmodule Mars do
 
     end
 
-    def execute_actions(rover, [ ac | actions ], plateau) do
+    def execute_actions([ ac | actions ], rover, plateau) do
         rover = Mars.action(ac, rover, plateau)
         case length(actions) do
             0 -> rover
-            _ -> Mars.execute_actions(rover, actions, plateau)
+            _ -> Mars.execute_actions(actions, rover, plateau)
         end
     end
 

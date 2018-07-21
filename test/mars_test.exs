@@ -2,13 +2,14 @@ defmodule MarsTest do
     use ExUnit.Case
     doctest Mars
 
-    test "execute actions" do
-        assert Mars.execute_actions(%Mars.Rover{ position: { 1, 2 }, direction: "N" }, ["L", "M", "L", "M", "L", "M", "L", "M", "M" ], {5, 5}) == %Mars.Rover{ position: { 1, 3 }, direction: "N" }
+    test "rover in position 1, 2 and direction N should finish at 1, 3 and N" do
+        assert Mars.execute_actions(["L", "M", "L", "M", "L", "M", "L", "M", "M" ], %Mars.Rover{ position: { 1, 2 }, direction: "N" }, {5, 5}) == %Mars.Rover{ position: { 1, 3 }, direction: "N" }
     end
 
-    test "execute actions 2" do
-        assert Mars.execute_actions(%Mars.Rover{ position: { 3, 3 }, direction: "E" }, [ "M", "M", "R", "M", "M", "R", "M", "R", "R", "M" ], {5, 5}) == %Mars.Rover{ position: { 5, 1 }, direction: "E" }
+    test "rover in position 3, 3 and direction E should finish at 5, 1 and E" do
+        assert Mars.execute_actions([ "M", "M", "R", "M", "M", "R", "M", "R", "R", "M" ], %Mars.Rover{ position: { 3, 3 }, direction: "E" }, {5, 5}) == %Mars.Rover{ position: { 5, 1 }, direction: "E" }
     end
+
 
     test "turn R with N should return E" do
         assert Mars.action("R", %Mars.Rover{ position: { 1, 1 }, direction: "N" }, { 5, 5 }) == %Mars.Rover{ position: { 1, 1 }, direction: "E" }
