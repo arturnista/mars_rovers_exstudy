@@ -18,29 +18,29 @@ defmodule Mars do
         end
     end
 
-    def action("L", %Mars.Rover{ direction: "N" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "E" }
-    end
-    def action("L", %Mars.Rover{ direction: "E" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "S" }
-    end
-    def action("L", %Mars.Rover{ direction: "S" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "W" }
-    end
-    def action("L", %Mars.Rover{ direction: "W" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "N" }
-    end
-
     def action("R", %Mars.Rover{ direction: "N" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "W" }
-    end
-    def action("R", %Mars.Rover{ direction: "W" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "S" }
-    end
-    def action("R", %Mars.Rover{ direction: "S" } = rover, _plateau) do
         %Mars.Rover{ rover | direction: "E" }
     end
     def action("R", %Mars.Rover{ direction: "E" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "S" }
+    end
+    def action("R", %Mars.Rover{ direction: "S" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "W" }
+    end
+    def action("R", %Mars.Rover{ direction: "W" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "N" }
+    end
+
+    def action("L", %Mars.Rover{ direction: "N" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "W" }
+    end
+    def action("L", %Mars.Rover{ direction: "W" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "S" }
+    end
+    def action("L", %Mars.Rover{ direction: "S" } = rover, _plateau) do
+        %Mars.Rover{ rover | direction: "E" }
+    end
+    def action("L", %Mars.Rover{ direction: "E" } = rover, _plateau) do
         %Mars.Rover{ rover | direction: "N" }
     end
 
