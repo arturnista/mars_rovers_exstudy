@@ -1,3 +1,3 @@
 defmodule Mars.Rover do
-    defstruct position: nil, direction: nil
+    defstruct position: nil, direction: nil, actions: nil
 end

@@ -1,60 +1,71 @@
 defmodule Mars do
 
     def execute(action_string) do
-        [ plateauData | rovers ] = String.split(action_string, "\n")
+        [ plateauData | roversData ] = String.split(action_string, "\n")
 
         [ px, py ] = String.split(plateauData, [" "])
         |> Enum.map(&Integer.parse/1)
         |> Enum.map(fn({ i, _n }) -> i end)
-        { px, py }
 
+        plateau = { px, py }
+
+        rovers = Enum.chunk(roversData, 2)
+        |> Enum.map(&Mars.create_rover/1)
     end
 
-    def execute_actions([ ac | actions ], rover, plateau) do
-        rover = Mars.action(ac, rover, plateau)
+    def create_rover([ posDir, actions ]) do
+        [ xStr, yStr, direction ] = String.split(posDir, [" "])
+        { x, _str } = Integer.parse(xStr)
+        { y, _str } = Integer.parse(yStr)
+        actions = String.split(actions, "")
+        |> Enum.filter(fn(x) -> String.length(x) > 0 end)
+        { :ok, %Mars.Rover{ position: { x, y }, direction: direction, actions: actions } }
+    end
+
+    def execute_actions(%Mars.Rover{ actions: actions } = rover, plateau) do
         case length(actions) do
             0 -> rover
-            _ -> Mars.execute_actions(actions, rover, plateau)
+            _ -> Mars.execute_actions(Mars.action(rover, plateau), plateau)
         end
     end
 
-    def action("R", %Mars.Rover{ direction: "N" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "E" }
+    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "N" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "E" }
     end
-    def action("R", %Mars.Rover{ direction: "E" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "S" }
+    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "E" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "S" }
     end
-    def action("R", %Mars.Rover{ direction: "S" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "W" }
+    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "S" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "W" }
     end
-    def action("R", %Mars.Rover{ direction: "W" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "N" }
-    end
-
-    def action("L", %Mars.Rover{ direction: "N" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "W" }
-    end
-    def action("L", %Mars.Rover{ direction: "W" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "S" }
-    end
-    def action("L", %Mars.Rover{ direction: "S" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "E" }
-    end
-    def action("L", %Mars.Rover{ direction: "E" } = rover, _plateau) do
-        %Mars.Rover{ rover | direction: "N" }
+    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "W" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "N" }
     end
 
-    def action("M", %Mars.Rover{ position: { x, y }, direction: "N" } = rover, { _px, py } = _plateau) do
-        %Mars.Rover{ rover | position: { x, min(py, y + 1) } }
+    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "N" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "W" }
     end
-    def action("M", %Mars.Rover{ position: { x, y }, direction: "S" } = rover, _plateau) do
-        %Mars.Rover{ rover | position: { x, max(0, y - 1) } }
+    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "W" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "S" }
     end
-    def action("M", %Mars.Rover{ position: { x, y }, direction: "E" } = rover, { px, _py } = _plateau) do
-        %Mars.Rover{ rover | position: { min(px, x + 1), y } }
+    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "S" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "E" }
     end
-    def action("M", %Mars.Rover{ position: { x, y }, direction: "W" } = rover, _plateau) do
-        %Mars.Rover{ rover | position: { max(0, x - 1), y } }
+    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "E" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, direction: "N" }
+    end
+
+    def action(%Mars.Rover{ actions: [ "M" | actions ], position: { x, y }, direction: "N" } = rover, { _px, py } = _plateau) do
+        %Mars.Rover{ rover | actions: actions, position: { x, min(py, y + 1) } }
+    end
+    def action(%Mars.Rover{ actions: [ "M" | actions ], position: { x, y }, direction: "S" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, position: { x, max(0, y - 1) } }
+    end
+    def action(%Mars.Rover{ actions: [ "M" | actions ], position: { x, y }, direction: "E" } = rover, { px, _py } = _plateau) do
+        %Mars.Rover{ rover | actions: actions, position: { min(px, x + 1), y } }
+    end
+    def action(%Mars.Rover{ actions: [ "M" | actions ], position: { x, y }, direction: "W" } = rover, _plateau) do
+        %Mars.Rover{ rover | actions: actions, position: { max(0, x - 1), y } }
     end
 
 end
