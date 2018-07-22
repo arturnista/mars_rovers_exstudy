@@ -1,4 +1,5 @@
 defmodule Mars do
+    # @Image Application.get_env(:app, :Image)
 
     def execute(action_string) do
         [ plateauData | roversData ] = String.split(action_string, "\n")
@@ -29,17 +30,17 @@ defmodule Mars do
                 |> Enum.chunk(2)
                 |> Enum.map(&Mars.create_rover/1)
 
-                image = Mars.create_image(plateau)
+                image = Image.create(plateau)
 
                 case Enum.find(rovers, fn(rd) -> match?(rd, { :error, "" }) end) do
                     { :error, message } -> message
                     _ -> 
                         rovers = Enum.map(rovers, fn({ _st, r }) -> r end)
-                        |> Enum.map(fn(r) -> Mars.initial_position_image(r, image, plateau) end)
+                        |> Enum.map(fn(r) -> Image.initial_position(r, image, plateau) end)
                         Enum.map(rovers, fn(rover) -> Mars.execute_actions(rover, Enum.filter(rovers, fn(r) -> r != rover end), plateau, image) end)
                 end
 
-                Mars.save_image(image)
+                Image.save(image)
         end
     end
 
@@ -72,53 +73,12 @@ defmodule Mars do
 
     def execute_actions(%Mars.Rover{ actions: [] } = rover, _rovers, plateau, image) do
         rover
-        |> Mars.final_position_image(image, plateau)
+        |> Image.final_position(image, plateau)
     end
     def execute_actions(rover, rovers, plateau, image) do
         Mars.action(rover, rovers, plateau)
-        |> Mars.path_image(rover, image, plateau)
+        |> Image.path(rover, image, plateau)
         |> Mars.execute_actions(rovers, plateau, image)
-    end
-
-    def create_image(size) do
-        { x, y } = size
-        image = :egd.create((x + 1) * 50, (y + 1) * 50)
-        xArr = 0..x
-        yArr = 0..y
-        fill_color = :egd.color({ 0, 0, 0 })
-        for xp <- xArr, yp <- yArr do
-            :egd.rectangle(image, { xp * 50, yp * 50 }, { xp * 50 + 50, yp * 50 + 50 }, fill_color)
-        end
-        image
-    end
-
-    def save_image(image) do
-        File.write("rover.png", :egd.render(image))            
-    end
-
-    def path_image(nRover, rover, image, plateau) do
-        fill_color = :egd.color({ 255, 150, 0 })
-        { _px, py } = plateau
-        { x1, y1 } = rover.position
-        { x2, y2 } = nRover.position
-        :egd.line(image, { x1 * 50 + 25, (py - y1) * 50 + 25 } , { x2 * 50 + 25, (py - y2) * 50 + 25 }, fill_color)
-        nRover
-    end
-
-    def initial_position_image(rover, image, plateau) do
-        fill_color = :egd.color({ 0, 200, 0 })
-        { _px, py } = plateau
-        { x1, y1 } = rover.position
-        :egd.rectangle(image, { x1 * 50 + 22, (py - y1) * 50 + 22 } , { x1 * 50 + 28, (py - y1) * 50 + 28 }, fill_color)
-        rover
-    end
-
-    def final_position_image(rover, image, plateau) do
-        fill_color = :egd.color({ 200, 0, 0 })
-        { _px, py } = plateau
-        { x1, y1 } = rover.position
-        :egd.rectangle(image, { x1 * 50 + 20, (py - y1) * 50 + 20 } , { x1 * 50 + 30, (py - y1) * 50 + 30 }, fill_color)
-        rover
     end
 
     def execute_actions(%Mars.Rover{ actions: [] } = rover, _rovers, _plateau) do
