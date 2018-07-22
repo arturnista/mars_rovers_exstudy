@@ -1,3 +1,6 @@
+# Rovers path image
+mars_rovers_*.png
+
 # The directory Mix will write compiled artifacts to.
 /_build/
 

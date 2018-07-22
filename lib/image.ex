@@ -12,32 +12,32 @@ defmodule Image do
         image
     end
 
-    def save(image) do
-        File.write("rover.png", :egd.render(image))            
+    def save(filename, image) do
+        File.write("#{filename}.png", :egd.render(image))            
     end
 
-    def path(nRover, rover, image, plateau) do
+    def draw_path(image, position1, position2, plateau) do
         fill_color = :egd.color({ 255, 150, 0 })
         { _px, py } = plateau
-        { x1, y1 } = rover.position
-        { x2, y2 } = nRover.position
+        { x1, y1 } = position1
+        { x2, y2 } = position2
         :egd.line(image, { x1 * 50 + 25, (py - y1) * 50 + 25 } , { x2 * 50 + 25, (py - y2) * 50 + 25 }, fill_color)
-        nRover
+        image
     end
 
-    def initial_position(rover, image, plateau) do
+    def draw_initial_position(image, position, plateau) do
         fill_color = :egd.color({ 0, 200, 0 })
         { _px, py } = plateau
-        { x1, y1 } = rover.position
+        { x1, y1 } = position
         :egd.rectangle(image, { x1 * 50 + 22, (py - y1) * 50 + 22 } , { x1 * 50 + 28, (py - y1) * 50 + 28 }, fill_color)
-        rover
+        image
     end
 
-    def final_position(rover, image, plateau) do
+    def draw_final_position(image, position, plateau) do
         fill_color = :egd.color({ 200, 0, 0 })
         { _px, py } = plateau
-        { x1, y1 } = rover.position
+        { x1, y1 } = position
         :egd.rectangle(image, { x1 * 50 + 20, (py - y1) * 50 + 20 } , { x1 * 50 + 30, (py - y1) * 50 + 30 }, fill_color)
-        rover
+        image
     end
 end
