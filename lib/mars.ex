@@ -2,7 +2,7 @@ defmodule Mars do
     @image Application.get_env(:mars, :image)
 
     @moduledoc """
-    Mars rovers module
+    Mars rover's module to handle Rover's Deploy
     """
 
     @doc """
@@ -17,18 +17,13 @@ defmodule Mars do
         * 0 0 N: Rover position and direction, X and Y as positions and N (north), E (east), S (south) and W (west) as the available directions
         * RLM: Rover actions, being R and L to turn the rover, Right and Left respectively and M to move foward
         * Your input do not have rovers amount limit \n
-    Executing the rovers actions generate a image of the rovers path named **mars_rovers_UNIX.png**\n
+    Executing the rovers actions generate a image of each rover's path named **mars_rovers_UNIX.png**\n
     ## Example
         iex> Mars.execute("5 5\\n0 0 N\\nM")
-        [
-            %Mars.Rover{actions: [], direction: "N", position: {0, 1}, past_positions: [{0, 0}]}
-        ]
+        "0 1 N"
 
         iex> Mars.execute("5 5\\n1 2 N\\nLMLMLMLMM\\n3 3 E\\nMMRMMRMRRM")
-        [
-            %Mars.Rover{actions: [], direction: "N", position: {1, 3}, past_positions: [{1, 2}, {0, 2}, {0, 1}, {1, 1}, {1, 2}]},
-            %Mars.Rover{actions: [], direction: "E", position: {5, 1}, past_positions: [{3, 3}, {4, 3}, {5, 3}, {5, 2}, {5, 1}, {4, 1}]}
-        ]
+        "1 3 N\\n5 1 E"
     """
     def execute(actionString)
     def execute(actionString) do
@@ -85,7 +80,7 @@ defmodule Mars do
 
     
     @doc """
-    Execute the rover actions.\n
+    Execute the rovers actions.\n
     The `plateau` argument represents the plateau size, being `{ x, y }`\n
     The `rovers` argument represents the rovers data, being `%Mars.Rover{actions: [], direction: "N", position: {0, 0}, past_positions: []}`\n\n
 
@@ -93,20 +88,16 @@ defmodule Mars do
         
     ## Example
         iex> Mars.execute([ %Mars.Rover{actions: ["M"], direction: "N", position: {0, 0}} ], { 5, 5 })
-        [
-            %Mars.Rover{actions: [], direction: "N", position: {0, 1}, past_positions: [{0, 0}]}
-        ]
+        "0 1 N"
 
         iex> Mars.execute([ %Mars.Rover{actions: ["L", "M", "L", "M", "L", "M", "L", "M", "M"], direction: "N", position: {1, 2}}, %Mars.Rover{actions: ["M", "M", "R", "M", "M", "R", "M", "R", "R", "M"], direction: "E", position: {3, 3}} ], {5, 5})
-        [
-            %Mars.Rover{actions: [], direction: "N", position: {1, 3}, past_positions: [{1, 2}, {0, 2}, {0, 1}, {1, 1}, {1, 2}]},
-            %Mars.Rover{actions: [], direction: "E", position: {5, 1}, past_positions: [{3, 3}, {4, 3}, {5, 3}, {5, 2}, {5, 1}, {4, 1}]}
-        ]
+        "1 3 N\\n5 1 E"
     """
     def execute(rovers, plateau, processedRovers \\ [])
     def execute([], plateau, processedRovers) do
         processedRovers
         |> Mars.create_images(plateau)
+        |> Mars.parse_output
     end
     def execute([ rover | rovers ], plateau, processedRovers) do
         rover = Mars.execute_actions(rover, Enum.filter(rovers ++ processedRovers, fn(r) -> r != rover end), plateau)
@@ -223,6 +214,24 @@ defmodule Mars do
     def draw_paths(image, [ pos1, pos2 | positions ], plateau) do
         @image.draw_path(image, pos1, pos2, plateau)
         draw_paths(image, [pos2] ++ positions, plateau)
+    end
+    
+
+    @doc """
+    Parse the value, returning the rovers position and direction as a string
+    The `rovers` argument represents the rovers to be parsed\n
+    
+    ## Example
+        iex> Mars.parse_output([ %Mars.Rover{ direction: "N", position: { 1, 2 } } ])
+        "1 2 N"
+
+        iex> Mars.parse_output([ %Mars.Rover{ direction: "N", position: { 0, 0 } }, %Mars.Rover{ direction: "S", position: { 1, 1 } }, %Mars.Rover{ direction: "E", position: { 2, 2 } }, %Mars.Rover{ direction: "W", position: { 3, 3 } } ])
+        "0 0 N\\n1 1 S\\n2 2 E\\n3 3 W"
+    """
+    def parse_output(rovers) do
+        rovers
+        |> Enum.map(fn(%Mars.Rover{ direction: d, position: { x, y }}) -> "#{x} #{y} #{d}" end)
+        |> Enum.join("\n")
     end
 
 end

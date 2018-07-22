@@ -4,7 +4,7 @@ defmodule ImageMock do
         
     end
 
-    def save(_image) do
+    def save(_filename, _image) do
         
     end
 

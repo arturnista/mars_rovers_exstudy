@@ -3,39 +3,26 @@ defmodule MarsTest do
     doctest Mars
 
     test "execute with 5 5\n0 0 N\nM should return rovers in 0, 1 N" do
-        assert Mars.execute("5 5\n0 0 N\nM") == [
+        assert Mars.execute("5 5\n0 0 N\nM") == "0 1 N"
+        [
             %Mars.Rover{actions: [], direction: "N", position: {0, 1}, past_positions: [{0, 0}]}
         ]
     end
 
     test "execute with 5 5\n0 0 N\nM\n0 1 N\nM\n0 2 N\nM should return rovers in 0, 1 N, 0, 1 N and 0, 3 N" do
-        assert Mars.execute("5 5\n0 0 N\nM\n0 1 N\nM\n0 2 N\nM") == [
-            %Mars.Rover{actions: [], direction: "N", position: {0, 0}, past_positions: []},
-            %Mars.Rover{actions: [], direction: "N", position: {0, 1}, past_positions: []},
-            %Mars.Rover{actions: [], direction: "N", position: {0, 3}, past_positions: [{0, 2}]}
-        ]
+        assert Mars.execute("5 5\n0 0 N\nM\n0 1 N\nM\n0 2 N\nM") == "0 0 N\n0 1 N\n0 3 N"
     end
 
     test "execute with 10 10\n0 3 N\nMMMRMMMRMMM\n0 2 N\nMMMMRMMMRMMM\n0 1 N\nMMMMMRMMMRMMM should return rovers in 5, 7 S, 4, 7 S and 3, 7 S" do
-        assert Mars.execute("10 10\n0 3 N\nMMMRMMMRMMM\n0 2 N\nMMMMRMMMRMMM\n0 1 N\nMMMMMRMMMRMMM") == [
-            %Mars.Rover{actions: [], direction: "S", position: {3, 3}, past_positions: [{0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 6}, {2, 6}, {3, 6}, {3, 5}, {3, 4}]},
-            %Mars.Rover{actions: [], direction: "S", position: {3, 4}, past_positions: [{0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 6}, {2, 6}, {3, 6}, {3, 5}]},
-            %Mars.Rover{actions: [], direction: "S", position: {3, 5}, past_positions: [{0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 6}, {2, 6}, {3, 6}]}
-        ]
+        assert Mars.execute("10 10\n0 3 N\nMMMRMMMRMMM\n0 2 N\nMMMMRMMMRMMM\n0 1 N\nMMMMMRMMMRMMM") == "3 3 S\n3 4 S\n3 5 S"
     end
 
     test "execute with 5 5\n0 2 N\nMMM\n0 0 N\nMMM should return rovers in 0, 5 N and 0, 3 N" do
-        assert Mars.execute("5 5\n0 2 N\nMMM\n0 0 N\nMMM") == [
-            %Mars.Rover{actions: [], direction: "N", position: {0, 5}, past_positions: [{0, 2}, {0, 3}, {0, 4}]},
-            %Mars.Rover{actions: [], direction: "N", position: {0, 3}, past_positions: [{0, 0}, {0, 1}, {0, 2}]}
-        ]
+        assert Mars.execute("5 5\n0 2 N\nMMM\n0 0 N\nMMM") == "0 5 N\n0 3 N"
     end
 
     test "execute with 5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM should return rovers in 1, 3 N and 5, 1, E" do
-        assert Mars.execute("5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM") == [
-            %Mars.Rover{actions: [], direction: "N", position: {1, 3}, past_positions: [{1, 2}, {0, 2}, {0, 1}, {1, 1}, {1, 2}]},
-            %Mars.Rover{actions: [], direction: "E", position: {5, 1}, past_positions: [{3, 3}, {4, 3}, {5, 3}, {5, 2}, {5, 1}, {4, 1}]}
-        ]
+        assert Mars.execute("5 5\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM") == "1 3 N\n5 1 E"
     end
 
     test "execute with 0 0\n1 2 N\nLMLMLMLMM\n3 3 E\nMMRMMRMRRM should return an error" do
