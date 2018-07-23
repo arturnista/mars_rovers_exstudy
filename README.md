@@ -11,7 +11,7 @@ The most common use case is passing a string to `Mars.execute/1`.
 The string is composed by a plateau size, defined by x and y, and a list of rovers, each being defined by a initial position (x and y) and direction (N, S, E or W), followed by a list of actions.     
 Rover's actions are processed one by one, one rover at a time.
 
-**For example**
+**For example**  
 The following input
 ```
 5 5
@@ -41,7 +41,7 @@ For example, running the last example, will result in this image.
 The whole Mars module is well tested and was developer under TDD (Test driven development) practices.
 You can run the tests by running:    
 ```
-	$ mix test  
+$ mix test  
 ```
 
 ## Docs  
@@ -49,6 +49,6 @@ The modules are also well documented using ex_docs.
 
 You can generate the documentation by running:  
 ```
-	$ mix docs
+$ mix docs
 ```
 
