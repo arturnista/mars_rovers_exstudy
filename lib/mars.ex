@@ -34,36 +34,52 @@ defmodule Mars do
             { :ok, plateau } -> 
                 rovers = roversData
                 |> Enum.chunk(2)
-                |> Enum.map(&Mars.create_rover/1)
+                |> Enum.map(&Mars.create_rover(&1, plateau))
 
                 case Enum.find(rovers, &match?(&1, { :error, "" })) do
                     { :error, message } -> message
                     _ -> 
-                        Enum.map(rovers, fn({ _st, r }) -> r end)
+                        rovers
+                        |> Enum.map(fn({ _st, r }) -> r end)
                         |> Mars.execute(plateau)
                 end
         end
     end
 
     def create_plateau(plateauData) do
-        pos = String.split(plateauData, [" "])
+        plateauData
+        |> String.split([" "])
         |> Enum.map(&Integer.parse/1)
-
-        case pos do
-            [ { px, sx }, { py, sy } ] when px > 0 and py > 0 and sx == "" and sy == "" -> { :ok, { px, py } }
-            _ -> { :error, "Plateau position must be two positive integers {x, y}" }
-        end
+        |> case do
+                [ { _x, xString }, { _y, yString } ] when xString != "" or yString != "" ->
+                    { :error, "Plateau position must be two positive integers {x, y}" }
+                [ { x, _xString }, { y, _yString } ] when x <= 0 or y <= 0 ->
+                    { :error, "Plateau position must be two positive integers {x, y}" }
+                [ { x, _xString }, { y, _yString } ] -> 
+                    { :ok, { x, y } }
+                _ -> 
+                    { :error, "Plateau position must be two positive integers {x, y}" }
+            end
     end
 
-    def create_rover([ posDir, actions ] = _roverData) do
-        case String.split(posDir, [" "]) do
+    def create_rover([ positionDirectionString, actions ] = _roversData, { xPlateauSize, yPlateauSize } = _plateau) do
+        case String.split(positionDirectionString, [" "]) do
             # Check if the position data are a valid three item list (x, y, direction)
-            [ xStr, yStr, direction ] ->
-                case { Integer.parse(xStr), Integer.parse(yStr) } do
+            [ xReceived, yReceived, direction ] ->
+                case { Integer.parse(xReceived), Integer.parse(yReceived) } do
+                    # Check if the positions values are strings
+                    { { _x, xString }, { _y, yString } } when xString != "" or yString != "" ->
+                        { :error, "Rover position must be two positive integers" }
                     # Check if the positions values are valid
-                    { { x, sx }, { y, sy } } when x >= 0 and y >= 0 and sx == "" and sy == "" ->
+                    { { x, _xString }, { y, _yString } } when x < 0 or y < 0 ->
+                        { :error, "Rover position must be two positive integers" }
+                    # Check if position is inside the plateau
+                    { { x, _xString }, { y, _yString } } when x > xPlateauSize or y > yPlateauSize -> 
+                        { :error, "Rover position should remaing inside the plateau" }
+                    { { x, _xString }, { y, _yString } } ->
                         # Split the action string and remove useless actions
-                        actions = String.split(actions, "")
+                        actions = actions
+                        |> String.split("")
                         |> Enum.filter(fn(x) -> String.length(x) > 0 end)
 
                         # Check if every action is valid
@@ -71,12 +87,13 @@ defmodule Mars do
                             nil -> { :ok, %Mars.Rover{ position: { x, y }, direction: direction, actions: actions } }
                             _ -> { :error, "Rover actions should be M (move), R (turn right) or L (turn left)" }
                         end
-                    _ -> { :error, "Rover position must be two positive integers {x, y} and a direction" }
+                    _ ->
+                        { :error, "Rover position must be two positive integers" }
                 end
             _ -> { :error, "Rover position must be two positive integers {x, y} and a direction" }
         end
     end
-    def create_rover(_wrongData), do: { :error, "Rover should be a position and a list of actions" }
+    def create_rover(roversData, _plateau) when length(roversData) != 2, do: { :error, "Rover should be a position and a list of actions" }
 
     
     @doc """
@@ -94,7 +111,8 @@ defmodule Mars do
         "1 3 N\\n5 1 E"
     """
     def execute(rovers, plateau, processedRovers \\ [])
-    def execute([], plateau, processedRovers) do
+    # Stop recursion function
+    def execute(rover, plateau, processedRovers) when rover == [] do
         processedRovers
         |> Mars.create_images(plateau)
         |> Mars.parse_output
@@ -107,7 +125,7 @@ defmodule Mars do
     @doc """
     Execute the rovers actions.\n
     The `rover` argument represents the current rover being processed\n
-    The `rovers` argument represents the rovers data, needed for collision detection\n
+    The `rovers` argument represents the rovers data, required for collision detection\n
     The `plateau` argument represents the plateau size, being `{ x, y }`\n
     ## Example
         iex> Mars.execute_actions(%Mars.Rover{ position: { 1, 2 }, direction: "N", actions: [ "M" ] }, [], {5, 5})
@@ -117,15 +135,17 @@ defmodule Mars do
         %Mars.Rover{ position: { 1, 3 }, direction: "E", actions: [], past_positions: [{1, 2}] }
 
     """
-    def execute_actions(%Mars.Rover{ actions: [] } = rover, _rovers, _plateau), do: rover
+    def execute_actions(%Mars.Rover{ actions: actions } = rover, _rovers, _plateau) when actions == [], do: rover
     def execute_actions(rover, rovers, plateau) do
-        Mars.execute_actions(Mars.action(rover, rovers, plateau), rovers, plateau)
+        rover
+        |> Mars.action(rovers, plateau)
+        |> Mars.execute_actions(rovers, plateau)
     end
 
     @doc """
     Execute a single action of a rover.\n
     The `rover` argument represents the current rover being processed\n
-    The `rovers` argument represents the rovers data, needed for collision detection\n
+    The `rovers` argument represents the rovers data, required for collision detection\n
     The `plateau` argument represents the plateau size, being `{ x, y }`\n
     ## Example
         iex> Mars.action(%Mars.Rover{ position: { 1, 2 }, direction: "N", actions: [ "M" ] }, [], {5, 5})
@@ -138,33 +158,27 @@ defmodule Mars do
         %Mars.Rover{ position: { 1, 3 }, direction: "E", actions: [], past_positions: [{1, 2}] }
 
     """
-    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "N" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "E" }
-    end
-    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "E" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "S" }
-    end
-    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "S" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "W" }
-    end
-    def action(%Mars.Rover{ actions: [ "R" | actions ], direction: "W" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "N" }
+    def action(%Mars.Rover{ actions: [ action | actions ], direction: direction } = rover, _rovers, _plateau) when action == "R" do
+        direction = case direction do
+            "N" -> "E"
+            "E" -> "S"
+            "S" -> "W"
+            "W" -> "N"
+        end
+        %Mars.Rover{ rover | actions: actions, direction: direction }
     end
 
-    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "N" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "W" }
-    end
-    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "W" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "S" }
-    end
-    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "S" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "E" }
-    end
-    def action(%Mars.Rover{ actions: [ "L" | actions ], direction: "E" } = rover, _rovers, _plateau) do
-        %Mars.Rover{ rover | actions: actions, direction: "N" }
+    def action(%Mars.Rover{ actions: [ action | actions ], direction: direction } = rover, _rovers, _plateau) when action == "L" do
+        direction = case direction do
+            "N" -> "W"
+            "W" -> "S"
+            "S" -> "E"
+            "E" -> "N"
+        end
+        %Mars.Rover{ rover | actions: actions, direction: direction }
     end
 
-    def action(%Mars.Rover{ actions: [ "M" | actions ], position: { x, y }, direction: direction, past_positions: past_positions } = rover, rovers, { px, py } = _plateau) do
+    def action(%Mars.Rover{ actions: [ action | actions ], position: { x, y }, direction: direction, past_positions: past_positions } = rover, rovers, { px, py } = _plateau) when action == "M" do
         movePosition = case direction do
             "N" -> { x, min(py, y + 1) }
             "S" -> { x, max(0, y - 1) }
@@ -189,10 +203,12 @@ defmodule Mars do
         { :error, { 2, 2 } }
     """
     def position_available?({ x, y } = position, rovers) do
-        case Enum.find(rovers, fn(%Mars.Rover{ position: { rx, ry } }) -> x == rx && ry == y end) do
-            nil -> { :ok, position }
-            _ -> { :error, position }
-        end
+        rovers
+        |> Enum.find(fn(%Mars.Rover{ position: { rx, ry } }) -> x == rx && ry == y end)
+        |> case do
+                nil -> { :ok, position }
+                _ -> { :error, position }
+            end
     end
 
     def create_images(rovers, plateau) do
@@ -210,7 +226,7 @@ defmodule Mars do
         rovers
     end
 
-    def draw_paths(_image, [ _pos ], _plateau), do: :ok
+    def draw_paths(_image, positions, _plateau) when length(positions) < 2, do: :ok
     def draw_paths(image, [ pos1, pos2 | positions ], plateau) do
         @image.draw_path(image, pos1, pos2, plateau)
         draw_paths(image, [pos2] ++ positions, plateau)
@@ -230,7 +246,7 @@ defmodule Mars do
     """
     def parse_output(rovers) do
         rovers
-        |> Enum.map(fn(%Mars.Rover{ direction: d, position: { x, y }}) -> "#{x} #{y} #{d}" end)
+        |> Enum.map(fn(%Mars.Rover{ direction: direction, position: { x, y }}) -> "#{x} #{y} #{direction}" end)
         |> Enum.join("\n")
     end
 

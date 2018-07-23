@@ -59,57 +59,75 @@ defmodule MarsTest do
 
 
     test "create rover with 1 2 N and LMLMLMLMM should return a rover with position 1, 2, direction N and actions as a list" do
-        assert Mars.create_rover(["1 2 N", "LMLMLMLMM"]) == {
+        assert Mars.create_rover(["1 2 N", "LMLMLMLMM"], {5, 5}) == {
             :ok,
             %Mars.Rover{ position: { 1, 2 }, direction: "N", actions: ["L", "M", "L", "M", "L", "M", "L", "M", "M" ], past_positions: [] }
         }
     end
 
     test "create rover without actions should return an error" do
-        assert Mars.create_rover(["1 2 N"]) == {
+        assert Mars.create_rover(["1 2 N"], {5, 5}) == {
             :error, "Rover should be a position and a list of actions"
         }
     end
 
     test "create rover with three items should return an error" do
-        assert Mars.create_rover(["1 2 N", "MMM", "M"]) == {
+        assert Mars.create_rover(["1 2 N", "MMM", "M"], {5, 5}) == {
             :error, "Rover should be a position and a list of actions"
         }
     end
 
     test "create rover with negative position must should an error" do
-        assert Mars.create_rover(["1 -2 N", "MMM"]) == {
-            :error, "Rover position must be two positive integers {x, y} and a direction"
+        assert Mars.create_rover(["1 -2 N", "MMM"], {5, 5}) == {
+            :error, "Rover position must be two positive integers"
         }
     end
 
     test "create rover with string position must should an error" do
-        assert Mars.create_rover(["1 abc N", "MMM"]) == {
-            :error, "Rover position must be two positive integers {x, y} and a direction"
+        assert Mars.create_rover(["1 abc N", "MMM"], {5, 5}) == {
+            :error, "Rover position must be two positive integers"
         }
     end
 
     test "create rover with number+string position must should an error" do
-        assert Mars.create_rover(["1 123abc N", "MMM"]) == {
-            :error, "Rover position must be two positive integers {x, y} and a direction"
+        assert Mars.create_rover(["1 1abc N", "MMM"], {5, 5}) == {
+            :error, "Rover position must be two positive integers"
         }
     end
 
     test "create rover without direction should return an error" do
-        assert Mars.create_rover(["1 2", "MMM"]) == {
+        assert Mars.create_rover(["1 2", "MMM"], {5, 5}) == {
             :error, "Rover position must be two positive integers {x, y} and a direction"
         }
     end
 
     test "create rover with actions being ABC should return an error" do
-        assert Mars.create_rover(["1 2 N", "ABC"]) == {
+        assert Mars.create_rover(["1 2 N", "ABC"], {5, 5}) == {
             :error, "Rover actions should be M (move), R (turn right) or L (turn left)"
         }
     end
 
     test "create rover with actions being MMRARLL should return an error" do
-        assert Mars.create_rover(["1 2 N", "MMRARLL"]) == {
+        assert Mars.create_rover(["1 2 N", "MMRARLL"], {5, 5}) == {
             :error, "Rover actions should be M (move), R (turn right) or L (turn left)"
+        }
+    end
+
+    test "create rover at 6 2 with plateau of 5 5 should return an error" do
+        assert Mars.create_rover(["6 2 N", "MMM"], {5, 5}) == {
+            :error, "Rover position should remaing inside the plateau"
+        }
+    end
+
+    test "create rover at 2 6 with plateau of 5 5 should return an error" do
+        assert Mars.create_rover(["2 6 N", "MMM"], {5, 5}) == {
+            :error, "Rover position should remaing inside the plateau"
+        }
+    end
+
+    test "create rover at 6 6 with plateau of 5 5 should return an error" do
+        assert Mars.create_rover(["6 6 N", "MMM"], {5, 5}) == {
+            :error, "Rover position should remaing inside the plateau"
         }
     end
 
